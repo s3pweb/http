@@ -1,7 +1,7 @@
 {
   "name": "@s3pweb/capacitor-http",
   "private": false,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A native HTTP plugin for CORS-free requests and file transfers",
   "main": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
