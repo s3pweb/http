@@ -1,4 +1,5 @@
 
+.npmrc
 .idea/
 dist
 .sourcemaps

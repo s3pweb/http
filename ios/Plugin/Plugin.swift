@@ -89,35 +89,53 @@ public class CAPHttpPlugin: CAPPlugin {
   }
   
   @objc public func uploadFile(_ call: CAPPluginCall) {
+    
+    var fullFormData: Data?
+
     guard let urlValue = call.getString("url") else {
       return call.reject("Must provide a URL")
     }
-    guard let filePath = call.getString("filePath") else {
-      return call.reject("Must provide a file path to download the file to")
-    }
-    let name = call.getString("name") ?? "file"
-    
-    let fileDirectory = call.getString("fileDirectory") ?? "DOCUMENTS"
-    
+
     guard let url = URL(string: urlValue) else {
       return call.reject("Invalid URL")
     }
+
+
+    let filePath = call.getString("filePath") 
     
-    guard let fileUrl = FilesystemUtils.getFileUrl(filePath, fileDirectory) else {
-      return call.reject("Unable to get file URL")
+    if(filePath)
+    {
+      guard let fileUrl = FilesystemUtils.getFileUrl(filePath, fileDirectory) else {
+        return call.reject("Unable to get file URL")
+      }
+      
+      let fileDirectory = call.getString("fileDirectory") ?? "DOCUMENTS"
+
+      do {
+        fullFormData = try generateFullMultipartRequestBody(fileUrl, name, boundary)
+      } catch let e {
+        return call.reject("Unable to read file to upload", "UPLOAD", e)
+      }
     }
+    else{
+      guard let base64 = call.getString("blob") else {
+        return call.reject("Must provide a filePath or a blob in base64")
+      }
+
+      do {
+        fullFormData = try generateFullMultipartRequestBodyFromBase64(blob, "image/jpg", boundary)
+      } catch let e {
+        return call.reject("Unable to read file to upload", "UPLOAD", e)
+      }
+    }
+
+    
+    let name = call.getString("name") ?? "file"
    
     var request = URLRequest.init(url: url)
     request.httpMethod = "POST"
     
-    let boundary = UUID().uuidString
-    
-    var fullFormData: Data?
-    do {
-      fullFormData = try generateFullMultipartRequestBody(fileUrl, name, boundary)
-    } catch let e {
-      return call.reject("Unable to read file to upload", "UPLOAD", e)
-    }
+    let boundary = UUID().uuidString    
 
 
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -387,6 +405,21 @@ public class CAPHttpPlugin: CAPPlugin {
     let mimeType = FilesystemUtils.mimeTypeForPath(path: fname)
     data.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
     data.append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(fname)\"\r\n".data(using: .utf8)!)
+    data.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+    data.append(fileData)
+    data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+    
+    return data
+  }
+
+  func generateFullMultipartRequestBodyFromBase64(_ base64: String, _ mimeType: String, _ boundary: String) throws -> Data {
+    var data = Data()
+    
+    let fileData = try Data(base64).base64EncodedString()
+
+    
+    data.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
+    data.append("Content-Disposition: form-data; name=\"\(name)\"\r\n".data(using: .utf8)!)
     data.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
     data.append(fileData)
     data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)

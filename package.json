@@ -1,5 +1,6 @@
 {
-  "name": "@s3pweb/http",
+  "name": "@s3pweb/capacitor-http",
+  "private": false,
   "version": "0.2.1",
   "description": "A native HTTP plugin for CORS-free requests and file transfers",
   "main": "dist/esm/index.js",
@@ -63,9 +64,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/capacitor-community/http"
+    "url": "https://github.com/s3pweb/http"
   },
   "bugs": {
-    "url": "https://github.com/capacitor-community/http/issues"
+    "url": "https://github.com/s3pweb/http/issues"
   }
 }
