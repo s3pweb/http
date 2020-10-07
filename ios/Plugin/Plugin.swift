@@ -431,7 +431,7 @@ public class CAPHttpPlugin: CAPPlugin {
         data.append(fileData)
         data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
         
-        CAPLog.print("data=",data)
+        CAPLog.print("form-data size =",data)
         
         return data
     }
